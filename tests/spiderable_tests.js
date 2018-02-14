@@ -1,6 +1,8 @@
+import { _ }          from 'meteor/underscore';
+import { HTTP }       from 'meteor/http';
 import { Spiderable } from 'meteor/jazeee:spiderable-longer-timeout';
 
-Tinytest.add('spiderable - phantom url generation', (test, expect) => {
+Tinytest.add('phantom url generation', (test) => {
   const absUrl = 'http://example.com';
   _.each([
     // Requests resulting from `<meta name='fragment' content='!'>`
@@ -53,10 +55,18 @@ Tinytest.add('spiderable - phantom url generation', (test, expect) => {
     }
   ], (testCase) => {
     testCase.absUrl = testCase.absUrl || absUrl;
+    test.equal(Spiderable._urlForPhantom(absUrl, testCase.requestUrl), absUrl + testCase.expected);
+  });
+});
 
-    test.equal(
-      Spiderable._urlForPhantom(absUrl, testCase.requestUrl),
-      absUrl + testCase.expected
-    );
+Tinytest.addAsync('rendering test', (test, ready) => {
+  HTTP.get('http://localhost:3000?_escaped_fragment_=', (err, res) => {
+    test.isFalse(!!err);
+    try {
+      test.isFalse(!!~res.content.indexOf('script'));
+    } catch (e) {
+      // Error
+    }
+    ready();
   });
 });
